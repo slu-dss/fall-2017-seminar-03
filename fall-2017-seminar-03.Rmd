@@ -32,44 +32,91 @@ You will also need a number of other packages that we've worked with in the past
 
 ```{r}
 library(broom)     # tidying data
+library(dplyr)     # wrangling data
 library(ggplot2)   # plotting data
 library(maptools)  # tools for working with spatial data
 library(rgdal)     # work with shapefiles
+library(stlData)   # St. Louis spatial data
 ```
 
+If you are missing any of the first three packages, you need to install the `tidyverse` - `install.packages("tidyverse")`. If you are missing any of the last three packages, you need to install them individually. `maptools` and `rgdal` can be installed using the `install.packages()` function. `stlData` requires `devtools` to be installed: `devtools::install_github("chris-prener/stlData")`.
 
 ## Review - Reading Geometric Data in R
-We use the `rgdal` package to read shapefiles into `R`. These data must be in the **top-level** of your `R` project directory. To import our `missouriTract` shapefile, we use the `readOGR()` function. We need to specify `dsn = "."` for each use of the function, and the layer should match the name of your shapefile:
+We use the `rgdal` package to read shapefiles into `R`. These data must be in the **top-level** of your `R` project directory. To import one of our files, the `HYDRO_AreaWater` shapefile, we use the `readOGR()` function. We need to specify `dsn = "."` for each use of the function, and the layer should match the name of your shapefile.
+
+Once imported, these data will appear under the "Values" section of the global environment as an object named `import`. However, they are not in a data frame structure. We need to use the `broom` package's `tidy()` function to disaggregate these data and store them in a data frame. We'll do this based on a common ID variable named `HYDROID`:
 
 ```{r}
-import <- readOGR(dsn = ".", layer = "missouriTract")
+import <- readOGR(dsn = ".", layer = "HYDRO_AreaWater")
+missRiv <- tidy(import, region = "HYDROID")
 ```
 
-Once imported, these data will appear under the "Values" section of the global environment as an object named `import`. However, they are not in a data frame structure. We need to use the `broom` package's `tidy()` function to disaggregate these data and store them in a data frame:
+Now, you try importing the data from the `stlTract` shapefile using the `readOGR()` function into the `import` object. Then tidy them using the `tidy()` function and the common ID variable `GEOID`, and save the output into an object named `stlTract`:
 
 ```{r}
-missouriTract <- tidy(import, region = "GEOID")
+import <- readOGR(dsn = ".", layer = "stlTract")
+stlTract <- tidy(import, region = "GEOID")
 ```
 
-
-
-Now, you try importing the data from the `stlTract` shapefile using the `readOGR()` function into the `import` object. Then tidy them using the `tidy()` function and save the output into an object named `stlTract`. You are combining the two code chunk above (skip the `View()` code chunk) into a single code chunk:
-
-```{r}
-
-```
-
-## Plotting Census Tracts
+## Plotting Polygons
 
 We can create simple maps of just the census tracts using `ggplot2` and the `geom_polygon()` function we introduced above:
 
 ```{r}
 ggplot() +
-  geom_polygon(data = missouriTract, mapping = aes(x = long, y = lat, group = id)) +
+  geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id)) +
   coord_map()
 ```
 
 Now try plotting just the census tracts in St. Louis using the `stlTract` data:
+
+```{r}
+ggplot() +
+  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id)) +
+  coord_map()
+```
+
+## Adding Color
+```{r}
+ggplot() +
+  geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
+  coord_map()
+```
+
+```{r}
+ggplot() +
+  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id), fill = "#4f9d00", color="black") +
+  coord_map()
+```
+
+## Combining Layers
+
+```{r}
+ggplot() +
+  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id), fill = "#4f9d00", colour="black") +
+  geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
+  coord_map()
+```
+
+## Plotting Data
+### Merging Data
+
+```{r}
+lead <- stlLead
+```
+
+```{r}
+lead %>%
+  rename(id = geoID) %>%
+  mutate(id = as.character(id)) -> lead
+```
+
+```{r}
+leadMap <- left_join(stlTract, lead, by = "id")
+```
+
+
+### Plotting Quantities
 
 ```{r}
 
