@@ -7,7 +7,6 @@ This repository contains files for:
 -   `fall-2017-seminar-03.Rmd` - R notebook source code for seminar
 -   `fall-2017-seminar-03.Rproj` - R project for seminar
 -   `fall-2017-seminar-03-handout.pdf` - handout
--   `missouriTract` - shapefile of census tracts in Missouri
 -   `stlTract` - shapefile of census tracts in the City of St. Louis
 -   `.gitignore`
 -   `LICENSE.md`
