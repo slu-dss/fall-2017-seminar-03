@@ -1,0 +1,77 @@
+---
+title: "DSS Fall 2017 Seminar 3"
+output: html_notebook
+authors: Chris & Christy
+---
+
+
+## Dependencies
+### New R Packages
+
+There is are three new `R` packages that we'll need for this week. The first, `mapproj`, is the dependency that we were missing at the end of the last session. The second, `RColorBrewer`, and the third, `viridis`, each give us access to a bunch color schemes that are ideal for mapping spatial data. The fourth package, `tidycensus`, makes it easy to download spatial data about St. Louis (and any other city in the U.S.!).
+
+```{r}
+install.packages("mapproj")
+install.packages("RColorBrewer")
+install.packages("viridis")
+install.packages("tidycensus")
+```
+
+Once they are installed, we can load them with the `library()` function:
+
+```{r}
+library(mapproj)       # tools for working with map projections
+library(RColorBrewer)  # color ramps
+library(viridis)       # color ramps
+library(tidycensus)    # accessing spatial data
+```
+
+### Other R Packages
+
+You will also need a number of other packages that we've worked with in the past sessions:
+
+```{r}
+library(broom)     # tidying data
+library(ggplot2)   # plotting data
+library(maptools)  # tools for working with spatial data
+library(rgdal)     # work with shapefiles
+```
+
+
+## Review - Reading Geometric Data in R
+We use the `rgdal` package to read shapefiles into `R`. These data must be in the **top-level** of your `R` project directory. To import our `missouriTract` shapefile, we use the `readOGR()` function. We need to specify `dsn = "."` for each use of the function, and the layer should match the name of your shapefile:
+
+```{r}
+import <- readOGR(dsn = ".", layer = "missouriTract")
+```
+
+Once imported, these data will appear under the "Values" section of the global environment as an object named `import`. However, they are not in a data frame structure. We need to use the `broom` package's `tidy()` function to disaggregate these data and store them in a data frame:
+
+```{r}
+missouriTract <- tidy(import, region = "GEOID")
+```
+
+
+
+Now, you try importing the data from the `stlTract` shapefile using the `readOGR()` function into the `import` object. Then tidy them using the `tidy()` function and save the output into an object named `stlTract`. You are combining the two code chunk above (skip the `View()` code chunk) into a single code chunk:
+
+```{r}
+
+```
+
+## Plotting Census Tracts
+
+We can create simple maps of just the census tracts using `ggplot2` and the `geom_polygon()` function we introduced above:
+
+```{r}
+ggplot() +
+  geom_polygon(data = missouriTract, mapping = aes(x = long, y = lat, group = id)) +
+  coord_map()
+```
+
+Now try plotting just the census tracts in St. Louis using the `stlTract` data:
+
+```{r}
+
+```
+
