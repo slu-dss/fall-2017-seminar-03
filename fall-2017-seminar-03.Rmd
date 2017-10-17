@@ -4,16 +4,18 @@ output: html_notebook
 authors: Chris & Christy
 ---
 
+## Introduction
+This is the notebook for the 3rd of 4 `R` seminar sessions for Fall 2017.
+
 
 ## Dependencies
 ### New R Packages
 
-There is are three new `R` packages that we'll need for this week. The first, `mapproj`, is the dependency that we were missing at the end of the last session. The second, `RColorBrewer`, and the third, `viridis`, each give us access to a bunch color schemes that are ideal for mapping spatial data. The fourth package, `tidycensus`, makes it easy to download spatial data about St. Louis (and any other city in the U.S.!).
+There is are three new `R` packages that we'll need for this week. The first, `mapproj`, is the dependency that we were missing at the end of the last session. The second, `RColorBrewer`, gives us access to a number of color schemes that are ideal for mapping spatial data. The third package, `tidycensus`, makes it easy to download spatial data about St. Louis (and any other city in the U.S.!).
 
 ```{r}
 install.packages("mapproj")
 install.packages("RColorBrewer")
-install.packages("viridis")
 install.packages("tidycensus")
 ```
 
@@ -22,7 +24,6 @@ Once they are installed, we can load them with the `library()` function:
 ```{r}
 library(mapproj)       # tools for working with map projections
 library(RColorBrewer)  # color ramps
-library(viridis)       # color ramps
 library(tidycensus)    # accessing spatial data
 ```
 
@@ -60,7 +61,7 @@ stlTract <- tidy(import, region = "GEOID")
 
 ## Plotting Polygons
 
-We can create simple maps of just the census tracts using `ggplot2` and the `geom_polygon()` function we introduced above:
+We can create simple maps using `ggplot2` and the `geom_polygon()` function we introduced last week. For example, here is the Mississippi River data we loaded above:
 
 ```{r}
 ggplot() +
@@ -77,24 +78,38 @@ ggplot() +
 ```
 
 ## Adding Color
-```{r}
-ggplot() +
-  geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
-  coord_map()
-```
+We tend to prefer maps that have a bit of color. Color choice is a complex subject, but one of the fundamental rules is to pick colors that make logical, cultural sense. For instance, it would *not* be culturally appropriate to map water using red when we traditionally use blue to symbolize water and water-related activities.
+
+There are two options for a `geom` to add color, one for the fill (`fill`) and one for the outline (`color`). Below, we've used hexdecimal values for a dark blue to change the color of the major rivers data.  
 
 ```{r}
 ggplot() +
-  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id), fill = "#4f9d00", color="black") +
+  geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), 
+               fill = "#00009d", color = "#00009d") +
   coord_map()
 ```
+
+Now, you edit the code below to change the fill color of the census tracts to a complimentary shade of green (#4f9d00) and make the outline colors black. You can litterally include the word `black` or you can use its hexdecimal value of `#000000`.
+
+```{r}
+ggplot() +
+  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id),
+               fill = "#4f9d00", color = "black") +
+  coord_map()
+```
+
+You can look up hexdecimal values using the *fantastic* website [ColorHexa](http://www.colorhexa.com).
 
 ## Combining Layers
 
+The code below combines the two maps we made above by layering geoms. `ggplot2` will draw the geoms from high to low, so you need to carefully specify the order. In this case, the tract data overlap the rivers, so they need to be drawn first before the hyrdological data.
+
 ```{r}
 ggplot() +
-  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id), fill = "#4f9d00", colour="black") +
-  geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
+  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id), 
+               fill = "#4f9d00", colour="black") +
+  geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), 
+               fill = "#00009d", color = "#00009d") +
   coord_map()
 ```
 
@@ -115,10 +130,115 @@ lead %>%
 leadMap <- left_join(stlTract, lead, by = "id")
 ```
 
+```{r}
+insurance <- stlInsurance
+insurance %>%
+  rename(id = geoID) %>%
+  mutate(id = as.character(id)) -> insurance
+insMap <- left_join(stlTract, insurance, by = "id")
+```
+
 
 ### Plotting Quantities
 
 ```{r}
-
+ggplot() +
+    geom_polygon(data = leadMap, aes(x = long, y = lat, group = id, fill = pctElevated)) +
+    coord_map()
 ```
+
+```{r}
+ggplot() +
+    geom_polygon(data = insMap, aes(x = long, y = lat, group = id, fill = pctUnins)) +
+    coord_map()
+```
+
+### Fixing the Color Ramp
+
+```{r}
+ggplot() +
+    geom_polygon(data = leadMap, aes(x = long, y = lat, group = id, fill = pctElevated)) +
+    scale_fill_distiller(palette = "Greens") +
+    coord_map()
+```
+
+```{r}
+ggplot() +
+    geom_polygon(data = leadMap, aes(x = long, y = lat, group = id, fill = pctElevated)) +
+    scale_fill_distiller(palette = "Greens", trans = "reverse") +
+    coord_map()
+```
+
+
+
+```{r}
+ggplot() +
+    geom_polygon(data = insMap, aes(x = long, y = lat, group = id, fill = pctUnins)) +
+    scale_fill_distiller(palette = "Reds", trans = "reverse") +
+    coord_map()
+```
+
+
+## Putting It All Together
+
+```{r}
+ggplot() +
+    geom_polygon(data = leadMap, aes(x = long, y = lat, group = id, fill = pctElevated)) +
+    geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
+    scale_fill_distiller(palette = "Greens", trans = "reverse") +
+    coord_map()
+```
+
+```{r}
+ggplot() +
+    geom_polygon(data = insMap, aes(x = long, y = lat, group = id, fill = pctUnins)) +
+    geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
+    scale_fill_distiller(palette = "Reds", trans = "reverse") +
+    coord_map()
+```
+
+## Accessing Demographic Data
+### Setting Up Tidy Census
+
+```{r}
+census_api_key("YOUR API KEY GOES HERE")
+```
+
+### Viewing Possible Variables
+
+```{r}
+v15 <- load_variables(2015, "acs5", cache = TRUE)
+View(v15)
+```
+
+```{r}
+medianInc <- get_acs(variables = "B19013_001", survey = "acs5", year = 2015, 
+                     geography = "tract", state = "MO", county = 510)
+```
+
+```{r}
+medianInc <- rename(medianInc, id = GEOID)
+incMap <- left_join(stlTract, medianInc, by = "id")
+ggplot() +
+    geom_polygon(data = incMap, aes(x = long, y = lat, group = id, fill = estimate)) +
+    geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
+    scale_fill_distiller(palette = "Reds", trans = "reverse") +
+    coord_map()
+```
+
+```{r}
+countBlack <- get_acs(variables = "B01001B_001", survey = "acs5", year = 2015, 
+                     geography = "tract", state = "MO", county = 510)
+```
+
+```{r}
+countBlack <- rename(countBlack, id = GEOID)
+raceMap <- left_join(stlTract, countBlack, by = "id")
+ggplot() +
+    geom_polygon(data = raceMap, aes(x = long, y = lat, group = id, fill = estimate)) +
+    geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
+    scale_fill_distiller(palette = "Reds", trans = "reverse") +
+    coord_map()
+```
+
 
