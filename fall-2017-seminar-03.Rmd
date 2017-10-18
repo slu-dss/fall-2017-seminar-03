@@ -7,7 +7,6 @@ authors: Chris & Christy
 ## Introduction
 This is the notebook for the 3rd of 4 `R` seminar sessions for Fall 2017.
 
-
 ## Dependencies
 ### New R Packages
 
@@ -49,7 +48,7 @@ Once imported, these data will appear under the "Values" section of the global e
 
 ```{r}
 import <- readOGR(dsn = ".", layer = "HYDRO_AreaWater")
-missRiv <- tidy(import, region = "HYDROID")
+rivers <- tidy(import, region = "HYDROID")
 ```
 
 Now, you try importing the data from the `stlTract` shapefile using the `readOGR()` function into the `import` object. Then tidy them using the `tidy()` function and the common ID variable `GEOID`, and save the output into an object named `stlTract`:
@@ -65,7 +64,7 @@ We can create simple maps using `ggplot2` and the `geom_polygon()` function we i
 
 ```{r}
 ggplot() +
-  geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id)) +
+  geom_polygon(data = rivers, mapping = aes(x = long, y = lat, group = id)) +
   coord_map()
 ```
 
@@ -84,7 +83,7 @@ There are two options for a `geom` to add color, one for the fill (`fill`) and o
 
 ```{r}
 ggplot() +
-  geom_polygon(data = missRiv, mapping = aes(x = long, y = lat, group = id), 
+  geom_polygon(data = rivers, mapping = aes(x = long, y = lat, group = id), 
                fill = "#00009d", color = "#00009d") +
   coord_map()
 ```
@@ -115,9 +114,11 @@ ggplot() +
 
 ## Plotting Data
 ### Merging Data
+The first step towards plotting our down data is to load some tabular data that we want to map, and quickly explore it using the `str()` function. We are looking for a unique identification number for each row in the tabular data.
 
 ```{r}
 lead <- stlLead
+str(stlLead)
 ```
 
 ```{r}
