@@ -5,7 +5,7 @@ authors: Chris & Christy
 ---
 
 ## Introduction
-This is the notebook for the 3rd of 4 `R` seminar sessions for Fall 2017.
+This is the notebook for the third of four `R` seminar sessions for Fall 2017.
 
 ## Dependencies
 ### New R Packages
@@ -41,6 +41,13 @@ library(stlData)   # St. Louis spatial data
 
 If you are missing any of the first three packages, you need to install the `tidyverse` - `install.packages("tidyverse")`. If you are missing any of the last three packages, you need to install them individually. `maptools` and `rgdal` can be installed using the `install.packages()` function. `stlData` requires `devtools` to be installed: `devtools::install_github("chris-prener/stlData")`.
 
+If you have to install more packages, you can do that here:
+
+```{r}
+
+```
+
+
 ## Review - Reading Geometric Data in R
 We use the `rgdal` package to read shapefiles into `R`. These data must be in the **top-level** of your `R` project directory. To import one of our files, the `stlRivers` shapefile, we use the `readOGR()` function. We need to specify `dsn = "."` for each use of the function, and the layer should match the name of your shapefile.
 
@@ -54,8 +61,7 @@ rivers <- tidy(import, region = "HYDROID")
 Now, you try importing the data from the `stlTract` shapefile using the `readOGR()` function into the `import` object. Then tidy them using the `tidy()` function and the common ID variable `GEOID`, and save the output into an object named `stlTract`:
 
 ```{r}
-import <- readOGR(dsn = ".", layer = "stlTract")
-stlTract <- tidy(import, region = "GEOID")
+
 ```
 
 ### How have the data changed?
@@ -81,9 +87,7 @@ ggplot() +
 Now try plotting just the census tracts in St. Louis using the `stlTract` data:
 
 ```{r}
-ggplot() +
-  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id)) +
-  coord_map()
+
 ```
 
 ## Adding Color
@@ -102,8 +106,7 @@ Now, you edit the code below to change the fill color of the census tracts to a 
 
 ```{r}
 ggplot() +
-  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id),
-               fill = "#4f9d00", color = "black") +
+  geom_polygon(data = stlTract, mapping = aes(x = long, y = lat, group = id)) +
   coord_map()
 ```
 
@@ -165,13 +168,10 @@ Now, you try replicating the three previous code blocks by:
 5. using the `left_join()` function to combine the `stlTract` data with the `insurance` data into a new data frame named `insMap`:
 
 ```{r}
-insurance <- stlInsurance
 
-insurance %>%
-  rename(id = geoID) %>%
-  mutate(id = as.character(id)) -> insurance
 
-insMap <- left_join(stlTract, insurance, by = "id")
+
+
 ```
 
 ### Plotting Quantities
@@ -184,12 +184,11 @@ ggplot() +
     coord_map()
 ```
 
-Now you trying creating a plot of the `pctUnins` data - the percent uninsured - in the `insMap` data frame. We've started the code here, you just need to fill in the data frame and variable name in the appropriate places:
+Now you trying creating a plot of the `pctUnins` data - the percent uninsured - in the `insMap` data frame. We've started the code here, you just need to add in the `fill = variableName` in the appropriate place:
 
 ```{r}
 ggplot() +
-    geom_polygon(data = insMap, mapping = aes(x = long, y = lat, group = id, 
-                                            fill = pctUnins)) +
+    geom_polygon(data = insMap, mapping = aes(x = long, y = lat, group = id)) +
     coord_map()
 ```
 
@@ -223,7 +222,6 @@ Now, you try adding a `"Reds"` color ramp in reverse order to the code we've pro
 ```{r}
 ggplot() +
     geom_polygon(data = insMap, aes(x = long, y = lat, group = id, fill = pctUnins)) +
-    scale_fill_distiller(palette = "Reds", trans = "reverse") +
     coord_map()
 ```
 
@@ -242,11 +240,9 @@ ggplot() +
 Now, you try creating a similar map that combines the `rivers` data with the rates of un-insurance in the City of St. Louis:
 
 ```{r}
-ggplot() +
-    geom_polygon(data = insMap, aes(x = long, y = lat, group = id, fill = pctUnins)) +
-    geom_polygon(data = rivers, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
-    scale_fill_distiller(palette = "Reds", trans = "reverse") +
-    coord_map()
+
+
+
 ```
 
 ## Accessing Demographic Data
@@ -278,7 +274,9 @@ With those data downloaded, we can follow a similar process as we did before for
 
 ```{r}
 medianInc <- rename(medianInc, id = GEOID)
+
 incMap <- left_join(stlTract, medianInc, by = "id")
+
 ggplot() +
     geom_polygon(data = incMap, aes(x = long, y = lat, group = id, fill = estimate)) +
     geom_polygon(data = rivers, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
@@ -289,7 +287,7 @@ ggplot() +
 Now, you try downloading the variable `"B01001B_001"` (number of African Americans) from the 2015 5-year ACS for City of St. Louis census tracts. We've got you started below:
 
 ```{r}
-countBlack <- get_acs(variables = "B01001B_001", survey = "acs5", year = 2015, 
+countBlack <- get_acs(variables = "", survey = "acs5", year = 2015, 
                      geography = "tract", state = "MO", county = 510)
 ```
 
@@ -301,13 +299,7 @@ With those data downloaded, follow the same process as we did in the previous ex
 4. use the `"RdPu"` (Red Purple) color ramp for your data
 
 ```{r}
-countBlack <- rename(countBlack, id = GEOID)
-raceMap <- left_join(stlTract, countBlack, by = "id")
-ggplot() +
-    geom_polygon(data = raceMap, aes(x = long, y = lat, group = id, fill = estimate)) +
-    geom_polygon(data = rivers, mapping = aes(x = long, y = lat, group = id), fill = "#00009d", color = "#00009d") +
-    scale_fill_distiller(palette = "RdPu", trans = "reverse") +
-    coord_map()
+
+
+
 ```
-
-
